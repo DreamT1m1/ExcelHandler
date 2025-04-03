@@ -166,7 +166,7 @@ for i in range(1, table_len + 1):
 
             # Search for the device's supervisor
             if "Vastutaja" in data:
-                supervisor = data["Vastutaja"].replace(" (Muuda)", "")
+                supervisor = data["Vastutaja"].replace(" (Muuda)", "").replace("(Muuda)", "")
                 print(f"Supervisor: {supervisor}")
             # Search for the place where the device is
             if "Asukoht" in data:
@@ -175,8 +175,8 @@ for i in range(1, table_len + 1):
                     print(f"Placed in: {place}")
 
             # Enter the name as it is in the 'Madis'
-
             ws[f"C{i}"].value = name_in_system_h2
+
             if not is_complex:
                 # Enter supervisor's name if it is in the 'Madis'
                 if supervisor:
@@ -196,8 +196,8 @@ for i in range(1, table_len + 1):
                     ws[f"G{i}"].value = f"Komplekti s/n: {complex_sn}"
                 if complex_code:
                     ws[f"G{i}"].value = f"Komplekti LTKH kood: {complex_code}"
-                if not complex_sn and not complex_code:
-                    ws[f"G{i}"].value = f"Pole ega s/n ega LTKH koodi"
+
+                # TODO: Enter all the data of the exact complex part
 
             # Set a new fill color
             fill = PatternFill(start_color="FF04D3FC",
