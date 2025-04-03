@@ -109,6 +109,12 @@ for i in range(1, table_len + 1):
 
         info = driver.find_elements(By.TAG_NAME, "b")
 
+        # Search for the main info html element
+        main_info_element = driver.find_element(By.ID, "seadmeylevaade")
+        # Search for the name of the device
+        name_in_system_h2 = main_info_element.find_element(By.TAG_NAME, "h2").text
+        print("Name in 'Madis':", name_in_system_h2)
+
         for el in info:
             parent = el.find_element(By.XPATH, "..")
             full_text = parent.text.strip()
@@ -117,8 +123,10 @@ for i in range(1, table_len + 1):
             device_sn = ''
             supervisor = ''
             place = ''
+
             complex_sn = ''
             complex_code = ''
+            complex_rp_code = ''
 
             # Check if it is a complex
             if not is_complex:
@@ -132,13 +140,29 @@ for i in range(1, table_len + 1):
                         device_sn = data["Seerianr"]
                         print("Seerianr", device_sn)
             else:
+                # TODO
                 print("Multiple devices")
                 complex_sn = data.get("Seerianr", "")
                 complex_code = data.get("Seadme nr", "")
+                complex_rp_code = data.get("RP-kood", "")
                 if complex_sn:
                     print(f"S/n of the complex: {complex_sn}")
                 if complex_code:
                     print(f"LTKH code of the complex: {complex_code}")
+                if complex_rp_code:
+                    print(f"RP-code of the complex: {complex_rp_code}")
+
+                driver.get(" ") # TODO: Get a page with exact part of the complex and get all the data of the part
+                additional_search_field = driver.find_element(
+                    By.ID, " ") # TODO: Get a HTML element of search bar and then insert
+                # Clear the field
+                additional_search_field.clear()
+                # Inset the value
+                additional_search_field.send_keys(searched_rp_code)
+                # 'Press' the Enter button
+                additional_search_field.send_keys(Keys.RETURN)
+                WebDriverWait(driver, 2)
+                # TODO: process the result. Get the row of found table with searched complex part
 
             # Search for the device's supervisor
             if "Vastutaja" in data:
@@ -149,11 +173,6 @@ for i in range(1, table_len + 1):
                 place = data["Asukoht"].replace(" (Muuda)", "")
                 if place.strip() != '/':
                     print(f"Placed in: {place}")
-            # Search for the main info html element
-            main_info_element = driver.find_element(By.ID, "seadmeylevaade")
-            # Search for the name of the device
-            name_in_system_h2 = main_info_element.find_element(By.TAG_NAME, "h2").text
-            print("Name in 'Madis':", name_in_system_h2)
 
             # Enter the name as it is in the 'Madis'
 
