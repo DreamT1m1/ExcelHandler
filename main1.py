@@ -105,6 +105,43 @@ for i in range(1, table_len + 1):
         else:
             is_complex = True
 
+        if is_complex:
+            print("Complex of devices found")
+            #  Go to "seadmed" page
+            driver.get("http://tehnika/tehnika/seadmed")
+
+            # Find all the search bars
+            additional_search_field = driver.find_element(By.ID, "kw")
+
+            # Clear the field
+            additional_search_field.clear()
+            # Inset the value
+            additional_search_field.send_keys(searched_rp_code)
+            WebDriverWait(driver ,1)
+            # 'Press' the Enter button
+            additional_search_field.send_keys(Keys.RETURN)
+            time.sleep(2)
+
+            # Find the table
+            components_table = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "table")))
+            # Find table's body
+            table_body = components_table.find_element(By.TAG_NAME, "tbody")
+            # Find components rows
+            components_rows = table_body.find_elements(By.TAG_NAME, "tr")
+            # Find the exact row
+            edit_btn = None
+            for row in components_rows:
+                cols = row.find_elements(By.TAG_NAME, "td")
+                for col in cols:
+                    if col.text == searched_rp_code:
+                        edit_btn = row.find_element(By.CSS_SELECTOR, "span.icon-external-24 a")
+                        break
+                if edit_btn is not None:
+                    break
+            link = edit_btn.get_attribute("href")
+            driver.get(link)
+            time.sleep(2)
+
         WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
         info = driver.find_elements(By.TAG_NAME, "b")
@@ -124,45 +161,15 @@ for i in range(1, table_len + 1):
             supervisor = ''
             place = ''
 
-            complex_sn = ''
-            complex_code = ''
-            complex_rp_code = ''
-
-            # Check if it is a complex
-            if not is_complex:
-                # Search for the either LTKH code or serial number
-                if data["RP-kood"] == searched_rp_code:
-                    if "Seadme nr" in data:
-                        device_ltkh_code = data["Seadme nr"]
-                        print("LKTH code", device_ltkh_code)
-                    else:
-                        print("No device LTKH code found")
-                        device_sn = data["Seerianr"]
-                        print("Seerianr", device_sn)
-            else:
-                # TODO
-                print("Multiple devices")
-                complex_sn = data.get("Seerianr", "")
-                complex_code = data.get("Seadme nr", "")
-                complex_rp_code = data.get("RP-kood", "")
-                if complex_sn:
-                    print(f"S/n of the complex: {complex_sn}")
-                if complex_code:
-                    print(f"LTKH code of the complex: {complex_code}")
-                if complex_rp_code:
-                    print(f"RP-code of the complex: {complex_rp_code}")
-
-                driver.get(" ") # TODO: Get a page with exact part of the complex and get all the data of the part
-                additional_search_field = driver.find_element(
-                    By.ID, " ") # TODO: Get a HTML element of search bar and then insert
-                # Clear the field
-                additional_search_field.clear()
-                # Inset the value
-                additional_search_field.send_keys(searched_rp_code)
-                # 'Press' the Enter button
-                additional_search_field.send_keys(Keys.RETURN)
-                WebDriverWait(driver, 2)
-                # TODO: process the result. Get the row of found table with searched complex part
+            # Search for the either LTKH code or serial number
+            if data["RP-kood"] == searched_rp_code:
+                if "Seadme nr" in data:
+                    device_ltkh_code = data["Seadme nr"]
+                    print("LKTH code", device_ltkh_code)
+                else:
+                    print("No device LTKH code found")
+                    device_sn = data["Seerianr"]
+                    print("Seerianr", device_sn)
 
             # Search for the device's supervisor
             if "Vastutaja" in data:
@@ -177,36 +184,26 @@ for i in range(1, table_len + 1):
             # Enter the name as it is in the 'Madis'
             ws[f"C{i}"].value = name_in_system_h2
 
-            if not is_complex:
-                # Enter supervisor's name if it is in the 'Madis'
-                if supervisor:
-                    ws[f"E{i}"].value = supervisor
-                # Enter LTKH code if it is in the 'Madis'
-                if device_ltkh_code:
-                    ws[f"F{i}"].value = device_ltkh_code
-                # Enter device serial number in case it was found
-                if device_sn:
-                    ws[f"G{i}"].value = f"s/n {device_sn}"
-                # Enter the place where the device is
-                if place.strip() != "/":
-                    ws[f"H{i}"].value = place
-            else:
-                # Enter the complex s/n
-                if complex_sn:
-                    ws[f"G{i}"].value = f"Komplekti s/n: {complex_sn}"
-                if complex_code:
-                    ws[f"G{i}"].value = f"Komplekti LTKH kood: {complex_code}"
-
-                # TODO: Enter all the data of the exact complex part
-
+            # Enter supervisor's name if it is in the 'Madis'
+            if supervisor:
+                ws[f"E{i}"].value = supervisor
+            # Enter LTKH code if it is in the 'Madis'
+            if device_ltkh_code:
+                ws[f"F{i}"].value = device_ltkh_code
+            # Enter device serial number in case it was found
+            if device_sn:
+                ws[f"G{i}"].value = f"s/n {device_sn}"
+            # Enter the place where the device is
+            if place.strip() != "/":
+                ws[f"H{i}"].value = place
             # Set a new fill color
             fill = PatternFill(start_color="FF04D3FC",
                                end_color="FF04D3FC",
                                fill_type="solid")
-
             # Change the color of processed row
             for col in USED_COLUMNS:
                 ws[f"{col}{i}"].fill = fill
+
             # Save the workbook
             try:
                 work_book.save("madis.xlsx")
